@@ -1,0 +1,22 @@
+{
+  "name": "bear-life",
+  "version": "1.0.0",
+  "description": "Life is not easy when you are a little bear in big world.",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 5000 -d -o"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kyle-west/bear-life.git"
+  },
+  "author": "kyle-west",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/kyle-west/bear-life/issues"
+  },
+  "homepage": "https://kyle-west.github.io/bear-life/",
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}
