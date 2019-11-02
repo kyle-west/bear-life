@@ -45,8 +45,8 @@ function initGame() {
   mainWidth = mainWidth || Math.min(document.body.clientWidth, document.body.clientHeight-60) - 20; 
   canvas = document.getElementById('game');
   ctx = canvas.getContext('2d');
-  canvas.width = mainWidth;
-  canvas.height = mainWidth;
+  canvas.width = document.body.clientWidth;
+  canvas.height = document.body.clientHeight-60;
   
   x = mainWidth / 2.1;
   y = mainWidth / 2.3;
