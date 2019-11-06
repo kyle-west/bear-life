@@ -112,8 +112,29 @@ function initGame() {
         movement[direction] = e.type == 'keydown';
       }
     }
+    const mouseEventHandler = (e) => {
+      let bearYoffSet = 120
+      let XoffSet = 25
+      let YoffSet = 50
+      movement = {
+        up: e.clientY - YoffSet < bear.y + bearYoffSet, 
+        down: e.clientY + YoffSet > bear.y + bearYoffSet,
+        left: e.clientX - XoffSet < bear.x,
+        right: e.clientX + XoffSet > bear.x,
+      }
+      canvas.onmousemove = mouseEventHandler
+    }
+
+    const clearMovement = () => {
+      movement = {};
+      canvas.onmousemove = null;
+    }
+
     document.addEventListener('keydown', keyEventHandler);
     document.addEventListener('keyup', keyEventHandler);
+    canvas.addEventListener('mousedown', mouseEventHandler);
+    canvas.addEventListener('mouseup', clearMovement);
+    canvas.addEventListener('mouseout', clearMovement);
 
     movementListenersAttached = true;
   }
