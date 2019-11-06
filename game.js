@@ -1,10 +1,11 @@
 var canvas, ctx, bear, immovableProps, hives;
 var statsCanvas, statsCtx, statsElemets;
 var x, y;
-var speed = 7;
+var speed = 4;
 var level = 1;
 var mainWidth;
-var keyBoardLisetnersAttached;
+var movement = {};
+var movementListenersAttached;
 window.showBoundingBoxes = false;
 window.showObjectIds = true;
 window.__objects__ = [];
@@ -94,48 +95,27 @@ function initGame() {
     }
   }
   
-  if (!keyBoardLisetnersAttached) {
-    document.addEventListener('keydown', (e) => {
-      let prevX = x;
-      let prevY = y;
-      switch (e.key) {
-        case "ArrowUp":
-          y -= speed;
-          bear.face(Bear.BACK);
-          break;
-        case "ArrowDown": 
-          bear.face(Bear.FRONT);
-          y += speed;
-          break;
-        case "ArrowLeft": 
-          bear.face(Bear.LEFT);
-          x -= speed;
-          break;
-        case "ArrowRight": 
-          bear.face(Bear.RIGHT);
-          x += speed;
-          break;
+  if (!movementListenersAttached) {
+    const directionKeyMap = {
+      'ArrowUp': 'up',
+      'ArrowDown': 'down',
+      'ArrowLeft': 'left',
+      'ArrowRight': 'right',
+      'w': 'up',
+      's': 'down',
+      'a': 'left',
+      'd': 'right',
+    }
+    const keyEventHandler = (e) => {  
+      let direction = directionKeyMap[e.key]
+      if (direction) {
+        movement[direction] = e.type == 'keydown';
       }
-  
-      bear.move(x, y);
-      let bearHasIntersect = immovableProps.reduce((a, prop) => {return a || boundingBoxesIntersect(bear, prop)}, false);
-      if (bearHasIntersect) {
-        bear.move(prevX, prevY);
-        x = prevX;
-        y = prevY;
-      }
-  
-      hives.forEach((hive, i) => {
-        if (boundingBoxesIntersect(bear, hive)) {
-          bear.eat(hive);
-          if (!hive.beesActive) {
-            hives.splice(i, 1);
-          }
-        }
-      })
-    });
+    }
+    document.addEventListener('keydown', keyEventHandler);
+    document.addEventListener('keyup', keyEventHandler);
 
-    keyBoardLisetnersAttached = true;
+    movementListenersAttached = true;
   }
 
   setInterval(animate, 1000/45);
@@ -149,6 +129,50 @@ function animate() {
   immovableProps.forEach(prop => prop.render());
   hives.forEach(hive => hive.render());
   bear.render(x, y);
+
+  
+  // vvv BEAR MOVES vvv
+  let prevX = x;
+  let prevY = y;
+  
+  if (movement.up) {
+    y -= speed;
+    bear.face(Bear.BACK);
+  }
+  
+  if (movement.down) {
+    bear.face(Bear.FRONT);
+    y += speed;
+  }
+
+  if (movement.left) {
+    bear.face(Bear.LEFT);
+    x -= speed;
+
+  }
+
+  if (movement.right) {
+    bear.face(Bear.RIGHT);
+    x += speed;
+  }
+
+  bear.move(x, y);
+  let bearHasIntersect = immovableProps.reduce((a, prop) => {return a || boundingBoxesIntersect(bear, prop)}, false);
+  if (bearHasIntersect) {
+    bear.move(prevX, prevY);
+    x = prevX;
+    y = prevY;
+  }
+
+  hives.forEach((hive, i) => {
+    if (boundingBoxesIntersect(bear, hive)) {
+      bear.eat(hive);
+      if (!hive.beesActive) {
+        hives.splice(i, 1);
+      }
+    }
+  })
+  // ^^^ BEAR MOVES ^^^
 
   if (hives.length == 0) {
     newGame();
