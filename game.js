@@ -1,14 +1,20 @@
+var QUERY = Object.fromEntries(window.location.search.substr(1).split('&').map(x => x.split('=')))
+
 var canvas, ctx, bear, immovableProps, hives;
-var statsCanvas, statsCtx, statsElemets;
+var statsElements = {}
 var x, y;
 var speed = 4;
 var level = 1;
 var mainWidth;
 var movement = {};
 var movementListenersAttached;
-window.showBoundingBoxes = false;
-window.showObjectIds = true;
+window.showBoundingBoxes = !!QUERY.debug;
+window.showObjectIds = !!QUERY.debug;
 window.__objects__ = [];
+
+const random = (max, min = 0) => Math.floor(min + Math.random() * max)
+const randomX = (scale = 0.9) => random(canvas.width * scale)
+const randomY = (scale = 0.9) => random(canvas.height * scale)
 
 function block(x, y, color = 'black', width = 8, height) {
   ctx.fillStyle = color;
@@ -29,15 +35,8 @@ function boundingBoxesIntersect (first, second) {
 }
 
 function initStats () {
-  mainWidth = mainWidth || Math.min(document.body.clientWidth, document.body.clientHeight-60) - 20; 
-  statsCanvas = document.getElementById('game-stats');
-  statsCtx = statsCanvas.getContext('2d');
-  statsCanvas.width = mainWidth;
-  statsCanvas.height = 60;
-
-  statsElemets = [];
-
-  statsElemets.push(new Beehive(statsCtx, 0, -10, Beehive.baseColor1));
+  statsElements.points = statsElements.points || document.querySelector('#game-stats #points') 
+  statsElements.level = statsElements.level || document.querySelector('#game-stats #level') 
 }
 
 function initGame() {
@@ -49,6 +48,11 @@ function initGame() {
   canvas.width = document.body.clientWidth;
   canvas.height = document.body.clientHeight-60;
   
+  window.addEventListener('resize', () => {
+    canvas.width = document.body.clientWidth;
+    canvas.height = document.body.clientHeight-60;
+  })
+  
   x = mainWidth / 2.1;
   y = mainWidth / 2.3;
   bear = bear || new Bear(ctx, x, y, Bear.FRONT);
@@ -57,30 +61,32 @@ function initGame() {
   hives = [];
   let i = 0;
 
-  let numTrees = mainWidth/30;
-  while (i < numTrees) {
-    let randX = Math.floor(Math.random() * canvas.width);
-    let randY = Math.floor(Math.random() * canvas.height);
-    let levelsHigh = 5 + Math.floor(Math.random() * 2);
-    let tree = new Tree(ctx, randX, randY, levelsHigh);
-    if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, tree)) {
-      var hasSpace = true;
-      immovableProps.forEach((prop, i) => {
-        if (boundingBoxesIntersect(prop, tree)) {
-          hasSpace = false;
+  let numTrees = mainWidth/15;
+  if(!QUERY.noTrees) {
+    while (i < numTrees) {
+      let randX = randomX(2)
+      let randY = randomY(1)
+      let levelsHigh = 5 + Math.floor(Math.random() * 2);
+      let tree = new Tree(ctx, randX, randY, levelsHigh);
+      if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, tree)) {
+        var hasSpace = true;
+        immovableProps.forEach((prop, i) => {
+          if (boundingBoxesIntersect(prop, tree)) {
+            hasSpace = false;
+          }
+        });
+        if (hasSpace) {
+          immovableProps.push(tree); i++;
         }
-      });
-      if (hasSpace) {
-        immovableProps.push(tree); i++;
       }
     }
-  }
+  } 
 
-  let numHives = 5 // mainWidth/30;
+  let numHives = 4 + level // mainWidth/30;
   i = 0;
   while (i < numHives) {
-    let randX = Math.floor(Math.random() * canvas.width);
-    let randY = Math.floor(Math.random() * canvas.height);
+    let randX = randomX(.8)
+    let randY = randomY(.8)
     let hive = new Beehive(ctx, randX, randY, null, true);
     if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, hive)) {
       var hasSpace = true;
@@ -111,6 +117,9 @@ function initGame() {
       if (direction) {
         movement[direction] = e.type == 'keydown';
       }
+
+      // handle shortcuts
+      e.key === 'f' && document.documentElement.requestFullscreen();
     }
     const mouseEventHandler = (e) => {
       let bearYoffSet = 120
@@ -122,6 +131,7 @@ function initGame() {
         left: e.clientX - XoffSet < bear.x,
         right: e.clientX + XoffSet > bear.x,
       }
+      QUERY.debug && console.log(`Mouse(${e.clientX}, ${e.clientY}) | Bear(${bear.x}, ${bear.y})`, movement)
       canvas.onmousemove = mouseEventHandler
     }
 
@@ -139,11 +149,11 @@ function initGame() {
     movementListenersAttached = true;
   }
 
-  setInterval(animate, 1000/45);
+  level === 1 && setInterval(animate, 1000/45);
 }
 
 function animate() {
-  animateStats();
+  renderStats();
   
   ctx.fillStyle = 'limegreen';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -200,20 +210,21 @@ function animate() {
   }
 }
 
-function animateStats () {
-  statsCtx.fillStyle = 'DarkSlateGray';
-  statsCtx.fillRect(0, 0, statsCanvas.width, statsCanvas.height);
-  statsElemets.forEach(element => element.render());
-  
-  statsCtx.fillStyle = 'white';
-  statsCtx.font="50px Monospace";
-  statsCtx.fillText(bear.stats.points, 80, 45);
-  statsCtx.fillText("LEVEL: " + level, mainWidth-275, 45);
+function renderStats () {
+  if (statsElements.points.GAME_VALUE !== bear.stats.points) {
+    statsElements.points.innerHTML = bear.stats.points;
+    statsElements.points.GAME_VALUE = bear.stats.points;
+  }
+  if (statsElements.level.GAME_VALUE !== level) {
+    statsElements.level.innerHTML = level;
+    statsElements.level.GAME_VALUE = level;
+  }
 }
 
 
 function newGame () {
   level++;
+  speed = 5 // get a little faster when you pass the first level
   window.__objects__ = [];
   initGame();
 }
