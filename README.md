@@ -2,7 +2,10 @@
 
 _Life is not easy when you are a little bear in big world._
 
+You can play this game with your mouse, keyboard, or Gamepad Controller.
+
 ## Play for FREE [here](https://kyle-west.github.io/bear-life/).
+
 
 <a href="https://kyle-west.github.io/bear-life/">
   <img src="./screenshot.png" alt="Bear Life Screenshot" style="max-width:500px; height:auto; margin:auto;" />
@@ -11,9 +14,7 @@ _Life is not easy when you are a little bear in big world._
 
 ## Origin story
 
-One day I wanted to build a web game entirely in Vanilla JavaScript. So I did. Now anyone in the whole world can play my game and know what it is like to be a bear and steal honey from angry bees.
-
-<!-- One day I wanted to build a web game entirely in Vanilla JavaScript. So I did. Later I wanted to test out the JS Gamepad API. So I did. Now anyone in the whole world can play my game and know what it is like to be a bear and steal honey from angry bees. -->
+One day I wanted to build a web game entirely in Vanilla JavaScript. _So I did._ Later I wanted to test out the JS Gamepad API. _So I did._ Now anyone in the whole world can play my game and know what it is like to be a bear and steal honey from angry bees.
 
 
 ## Contributing

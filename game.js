@@ -1,5 +1,5 @@
 var QUERY = Object.fromEntries(window.location.search.substr(1).split('&').map(x => x.split('=')))
-
+var gamepad = null;
 var canvas, ctx, bear, immovableProps, hives;
 var statsElements = {}
 var x, y;
@@ -145,11 +145,35 @@ function initGame() {
     canvas.addEventListener('mousedown', mouseEventHandler);
     canvas.addEventListener('mouseup', clearMovement);
     canvas.addEventListener('mouseout', clearMovement);
+    
+    window.addEventListener("gamepadconnected", function(e) {
+      gamepad = navigator.getGamepads()[e.gamepad.index];
+      console.log('gamepad attached')
+      window.addEventListener("gamepaddisconnected", function(e) {
+        gamepad = null
+        console.log('gamepad disconnected')
+      }, {once: true});
+    });
 
     movementListenersAttached = true;
   }
 
   level === 1 && setInterval(animate, 1000/45);
+}
+
+const axisThreshold = (value) => Math.abs(value) > 0.5
+function pollGamepad () {
+  [gamepad] = navigator.getGamepads()
+  if (!gamepad) return
+  let [leftRight, upDown] = gamepad.axes
+  QUERY.debug && console.log(`leftRight, upDown | ${[leftRight, upDown]}`)
+  movement = {
+    up: upDown < 0 && axisThreshold(upDown),
+    down: upDown > 0 && axisThreshold(upDown),
+    left: leftRight < 0 && axisThreshold(leftRight),
+    right: leftRight > 0 && axisThreshold(leftRight),
+  }
+  gamepad
 }
 
 function animate() {
@@ -161,6 +185,7 @@ function animate() {
   hives.forEach(hive => hive.render());
   bear.render(x, y);
 
+  gamepad && pollGamepad()
   
   // vvv BEAR MOVES vvv
   let prevX = x;
