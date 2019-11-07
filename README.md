@@ -2,9 +2,11 @@
 
 _Life is not easy when you are a little bear in big world._
 
-### Play for FREE [here](https://kyle-west.github.io/bear-life/).
+## Play for FREE [here](https://kyle-west.github.io/bear-life/).
 
-<img src="./screenshot.png" alt="Bear Life Screenshot" style="max-width:500px; height:auto; margin:auto;" />
+<a href="https://kyle-west.github.io/bear-life/">
+  <img src="./screenshot.png" alt="Bear Life Screenshot" style="max-width:500px; height:auto; margin:auto;" />
+</a>
 
 
 ## Origin story

@@ -17,6 +17,8 @@ class Bear {
       points: 0,
       lives: 1
     }
+    this.biteMutex = false
+    this.biteImmunityTime = 1000
   }
   
   static get BACK  () { return 0; }
@@ -33,7 +35,14 @@ class Bear {
   eat (hive) {
     console.log("Oh looks! I see a hive! Yummmy!");
     if (hive.beesActive) {
-      this.stats.points--;
+      if (!this.biteMutex) {
+        this.stats.points--;
+        if (this.stats.points < 0) this.stats.points = 0
+        this.biteMutex = true
+        setTimeout(() => {
+          this.biteMutex = false
+        }, this.biteImmunityTime)
+      }
     } else {
       this.stats.points++;
     }
@@ -57,6 +66,9 @@ class Bear {
       case Bear.LEFT:  this._left (x, y); break; 
       case Bear.RIGHT: this._right(x, y); break; 
       default:         this._back (x, y);
+    }
+    if (window.showBoundingBoxes) {
+      this.__block(x, y, 'blue', 1, 1);
     }
   }
 

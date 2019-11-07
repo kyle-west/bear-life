@@ -1,16 +1,44 @@
 <html>
   <head>
+    <title>Bear Life</title>
+    <link rel="shortcut icon" href="./hive.png" type="image/x-icon">
     <style>
       body {
         padding: 0;
         margin: 0;
         overflow: hidden;
+        user-select: none;
       }
       canvas {
         width: 100%;
-      }
-      #game {
         height: 100%;
+      }
+      #game-stats {
+        width: 100%;
+        height: 40px;
+        color: white;
+        background-color: #5448;
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: flex;
+        justify-content: space-between;
+        font-weight: bolder;
+        font-family: monospace;
+        font-size: 28px;
+        padding: 2px;
+      }
+      #game-stats img {
+        height: 32px;
+        width: auto;
+      }
+      #game-stats div {
+        margin: 4px;
+        display: block;
+        padding: 0px 16px;
+      }
+      #game-stats span {
+        vertical-align: top;
       }
     </style>
     <script src="bear.js"></script>
@@ -20,7 +48,15 @@
     <script src="game.js"></script>
   </head>
   <body onload="initGame()">
-    <canvas id="game-stats"></canvas>
+    <div id="game-stats">
+      <div>
+        <img src="./hive.png"/>
+        <span id="points"></span>
+      </div>
+      <div>
+        LEVEL: <span id="level"></span>
+      </div>
+    </div>
     <canvas id="game"></canvas>
   </body>
 </html>
