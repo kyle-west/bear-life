@@ -10,11 +10,25 @@ class Tree {
     let rand = 1 + Math.floor(Math.random() * 3);
     this.__leafColor = Tree[`leafColor${rand}`];
   }
-
+  
   static get leafColor1 () { return "forestgreen"; }
   static get leafColor2 () { return "darkgreen"; }
   static get leafColor3 () { return "SeaGreen"; }
   static get trunkColor () { return "brown"; }
+
+  get canPunch () {
+    return this.levelsHigh > 2
+  }
+  
+  getPunched () {
+    if (!this.canPunch) return;
+    setTimeout(() => {
+      this.levelsHigh--;
+      this._rightOffset = this.levelsHigh * 10;
+      this._bottomOffset = 10*(this.levelsHigh+1) + this._rightOffset/4;
+      this.move(this.x, this.y + 10)
+    }, 100)
+  }
 
   move (x, y) {
     this.x = x;

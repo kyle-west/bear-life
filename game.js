@@ -1,12 +1,21 @@
-var QUERY = Object.fromEntries(window.location.search.substr(1).split('&').map(x => x.split('=')))
+var QUERY = !!window.location.search &&
+  Object.fromEntries(
+    window.location
+          .search
+          .substr(1)
+          .split('&')
+          .map(x => x.split('='))
+          .map(([k,v]) => [k, JSON.parse(v)])
+  )
+console.log(QUERY)
 var gamepad = null;
 var canvas, ctx, bear, immovableProps, hives;
 var statsElements = {}
 var x, y;
-var speed = 4;
+var speed = QUERY.speed || 4;
 var level = 1;
 var mainWidth;
-var movement = {};
+var playerActions = {};
 var movementListenersAttached;
 window.showBoundingBoxes = !!QUERY.debug;
 window.showObjectIds = !!QUERY.debug;
@@ -61,33 +70,32 @@ function initGame() {
   hives = [];
   let i = 0;
 
-  let numTrees = mainWidth/15;
-  if(!QUERY.noTrees) {
-    while (i < numTrees) {
-      let randX = randomX(2)
-      let randY = randomY(1)
-      let levelsHigh = 5 + Math.floor(Math.random() * 2);
-      let tree = new Tree(ctx, randX, randY, levelsHigh);
-      if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, tree)) {
-        var hasSpace = true;
-        immovableProps.forEach((prop, i) => {
-          if (boundingBoxesIntersect(prop, tree)) {
-            hasSpace = false;
-          }
-        });
-        if (hasSpace) {
-          immovableProps.push(tree); i++;
+  let numTrees = QUERY.numTrees === undefined ? Math.min(Math.floor((mainWidth/15) * ((level + 1) * .5)), mainWidth/6) : QUERY.numTrees
+  while (i < numTrees) {
+    let randX = randomX(2)
+    let randY = randomY(1)
+    let levelsHigh = 5 + Math.floor(Math.random() * 2);
+    let tree = new Tree(ctx, randX, randY, levelsHigh);
+    if (!boundingBoxesIntersect(bear, tree) && !boundingBoxesIntersect(bear.fullBoundingBoxObject, tree)) {
+      var hasSpace = true;
+      immovableProps.forEach((prop) => {
+        if (boundingBoxesIntersect(prop, tree)) {
+          hasSpace = false;
         }
+      });
+      if (hasSpace) {
+        immovableProps.push(tree); i++;
       }
     }
-  } 
+  }
+  
 
-  let numHives = 4 + level // mainWidth/30;
+  let numHives = QUERY.numHives || (4 + level)
   i = 0;
   while (i < numHives) {
     let randX = randomX(.8)
     let randY = randomY(.8)
-    let hive = new Beehive(ctx, randX, randY, null, true);
+    let hive = new Beehive(ctx, randX, randY, null, QUERY.noBees === undefined);
     if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, hive)) {
       var hasSpace = true;
       immovableProps.forEach((prop, i) => {
@@ -115,28 +123,40 @@ function initGame() {
     const keyEventHandler = (e) => {  
       let direction = directionKeyMap[e.key]
       if (direction) {
-        movement[direction] = e.type == 'keydown';
+        playerActions[direction] = e.type == 'keydown';
+        playerActions.punch = false; 
       }
 
-      // handle shortcuts
-      e.key === 'f' && document.documentElement.requestFullscreen();
+      // handle game keys
+      if (e.type == 'keydown') {
+        switch (e.key) {
+          // fullscreen
+          case 'f': document.documentElement.requestFullscreen(); break;
+
+          case 'Space': 
+          case ' ': 
+            playerActions.punch = true; 
+            console.log('punch')
+            break;
+        }
+      }
     }
     const mouseEventHandler = (e) => {
       let bearYoffSet = 120
       let XoffSet = 25
       let YoffSet = 50
-      movement = {
+      playerActions = {
         up: e.clientY - YoffSet < bear.y + bearYoffSet, 
         down: e.clientY + YoffSet > bear.y + bearYoffSet,
         left: e.clientX - XoffSet < bear.x,
         right: e.clientX + XoffSet > bear.x,
       }
-      QUERY.debug && console.log(`Mouse(${e.clientX}, ${e.clientY}) | Bear(${bear.x}, ${bear.y})`, movement)
+      QUERY.debug && console.log(`Mouse(${e.clientX}, ${e.clientY}) | Bear(${bear.x}, ${bear.y})`, playerActions)
       canvas.onmousemove = mouseEventHandler
     }
 
     const clearMovement = () => {
-      movement = {};
+      playerActions = {};
       canvas.onmousemove = null;
     }
 
@@ -167,7 +187,7 @@ function pollGamepad () {
   if (!gamepad) return
   let [leftRight, upDown] = gamepad.axes
   QUERY.debug && console.log(`leftRight, upDown | ${[leftRight, upDown]}`)
-  movement = {
+  playerActions = {
     up: upDown < 0 && axisThreshold(upDown),
     down: upDown > 0 && axisThreshold(upDown),
     left: leftRight < 0 && axisThreshold(leftRight),
@@ -191,30 +211,33 @@ function animate() {
   let prevX = x;
   let prevY = y;
   
-  if (movement.up) {
+  if (playerActions.up) {
     y -= speed;
     bear.face(Bear.BACK);
   }
   
-  if (movement.down) {
+  if (playerActions.down) {
     bear.face(Bear.FRONT);
     y += speed;
   }
 
-  if (movement.left) {
+  if (playerActions.left) {
     bear.face(Bear.LEFT);
     x -= speed;
-
   }
 
-  if (movement.right) {
+  if (playerActions.right) {
     bear.face(Bear.RIGHT);
     x += speed;
   }
 
   bear.move(x, y);
-  let bearHasIntersect = immovableProps.reduce((a, prop) => {return a || boundingBoxesIntersect(bear, prop)}, false);
-  if (bearHasIntersect) {
+  let intersectedObject = immovableProps.reduce((a, prop) => {return a || (boundingBoxesIntersect(bear, prop) && prop)}, null);
+  if (intersectedObject) {
+    if (playerActions.punch && intersectedObject.canPunch) {
+      bear.throwPunch() && intersectedObject.getPunched()
+    } 
+    playerActions.punch = false;
     bear.move(prevX, prevY);
     x = prevX;
     y = prevY;
@@ -233,6 +256,10 @@ function animate() {
   if (hives.length == 0) {
     newGame();
   }
+
+  if (QUERY.points) {
+    bear.stats.points = QUERY.points
+  }
 }
 
 function renderStats () {
@@ -249,7 +276,7 @@ function renderStats () {
 
 function newGame () {
   level++;
-  speed = 5 // get a little faster when you pass the first level
+  speed = QUERY.speed || speed++ // get a little faster when you pass the first level
   window.__objects__ = [];
   initGame();
 }

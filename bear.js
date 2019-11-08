@@ -19,6 +19,7 @@ class Bear {
     }
     this.biteMutex = false
     this.biteImmunityTime = 1000
+    this._punching = false
   }
   
   static get BACK  () { return 0; }
@@ -46,6 +47,16 @@ class Bear {
     } else {
       this.stats.points++;
     }
+  }
+
+  throwPunch () {
+    if (this.stats.points < 1 || this._punching) return null;
+    this._punching = true;
+    setTimeout(() => {
+      this._punching = false;
+      this.stats.points--;
+    }, 200)
+    return true;
   }
 
   move (x, y) {
@@ -152,7 +163,12 @@ class Bear {
     this.__block(this.x + 5, this.y + 52, Bear.baseColor2, 12);   // left leg
     this.__block(this.x, this.y + 52, Bear.baseColor, 12);        // right leg
   
-    this.__block(this.x+2, this.y + 25, Bear.baseColor2, 11);     // right arm
+    // right arm
+    if (this._punching) {
+      this.__block(this.x+2, this.y + 25, Bear.baseColor2, 26, 11);
+    } else {
+      this.__block(this.x+2, this.y + 25, Bear.baseColor2, 11);
+    }
   
     this.__block(this.x, this.y, Bear.baseColor, 14, 20);         // head
     this.__block(this.x - 4, this.y - 4, Bear.baseColor, 10);     // right ear
@@ -171,7 +187,12 @@ class Bear {
     this.__block(this.x+3, this.y + 52, Bear.baseColor2, 12);     // right leg
     this.__block(this.x+8, this.y + 52, Bear.baseColor, 12);      // left leg
   
-    this.__block(this.x+7, this.y + 25, Bear.baseColor2, 11);     // left arm
+    // left arm
+    if (this._punching) {
+      this.__block(this.x - 8, this.y + 25, Bear.baseColor2, 26, 11);
+    } else {
+      this.__block(this.x+7, this.y + 25, Bear.baseColor2, 11);
+    }
     
     this.__block(this.x+6, this.y, Bear.baseColor, 14, 20);       // head
     this.__block(this.x + 14, this.y - 4, Bear.baseColor, 10);    // right ear
