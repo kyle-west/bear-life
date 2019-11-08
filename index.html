@@ -8,6 +8,9 @@
         margin: 0;
         overflow: hidden;
         user-select: none;
+        font-weight: bolder;
+        font-family: monospace;
+        font-size: 28px;
       }
       canvas {
         width: 100%;
@@ -23,9 +26,6 @@
         left: 0;
         display: flex;
         justify-content: space-between;
-        font-weight: bolder;
-        font-family: monospace;
-        font-size: 28px;
         padding: 2px;
       }
       #game-stats img {
@@ -40,6 +40,29 @@
       #game-stats span {
         vertical-align: top;
       }
+
+      .splash {
+        display: none;
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        top: 0;
+        font-size: 50px;
+      }
+      .splash.show {
+        display: block;
+      }
+
+      .splash [center] {
+        text-align: center;
+        margin-top: 40vh;
+      }
+
+      #game-over {
+        background-color: black;
+        color: white;
+      }
+
     </style>
     <script src="bear.js"></script>
     <script src="tree.js"></script>
@@ -53,10 +76,16 @@
         <img src="./hive.png"/>
         <span id="points"></span>
       </div>
+      <span id="countDown"></span>
       <div>
         LEVEL: <span id="level"></span>
       </div>
     </div>
     <canvas id="game"></canvas>
+    <div class="splash" id="game-over">
+      <div center>
+        GAME OVER
+      </div>
+    </div>
   </body>
 </html>

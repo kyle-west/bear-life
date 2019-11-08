@@ -17,6 +17,8 @@ var level = 1;
 var mainWidth;
 var playerActions = {};
 var movementListenersAttached;
+var levelStartTime, levelMaxTime
+var gameInterval
 window.showBoundingBoxes = !!QUERY.debug;
 window.showObjectIds = !!QUERY.debug;
 window.__objects__ = [];
@@ -45,7 +47,8 @@ function boundingBoxesIntersect (first, second) {
 
 function initStats () {
   statsElements.points = statsElements.points || document.querySelector('#game-stats #points') 
-  statsElements.level = statsElements.level || document.querySelector('#game-stats #level') 
+  statsElements.level = statsElements.level || document.querySelector('#game-stats #level')
+  statsElements.countDown = statsElements.countDown || document.querySelector('#game-stats #countDown')
 }
 
 function initGame() {
@@ -178,7 +181,12 @@ function initGame() {
     movementListenersAttached = true;
   }
 
-  level === 1 && setInterval(animate, 1000/45);
+  levelStartTime = new Date()
+  levelMaxTime = QUERY.time || 120 // seconds
+
+  if (level === 1) {
+    gameInterval = setInterval(animate, 1000/45);
+  }
 }
 
 const axisThreshold = (value) => Math.abs(value) > 0.5
@@ -262,6 +270,12 @@ function animate() {
   }
 }
 
+function renderTime(seconds) {
+  let min = Math.floor(seconds/60).toString().padStart(2,'0')
+  let sec = Math.floor(seconds % 60).toString().padStart(2,'0')
+  return `${min}:${sec}`
+}
+
 function renderStats () {
   if (statsElements.points.GAME_VALUE !== bear.stats.points) {
     statsElements.points.innerHTML = bear.stats.points;
@@ -270,6 +284,17 @@ function renderStats () {
   if (statsElements.level.GAME_VALUE !== level) {
     statsElements.level.innerHTML = level;
     statsElements.level.GAME_VALUE = level;
+  }
+  
+  // Clock
+  let timeUsed = Math.floor((new Date() - levelStartTime)/1000)
+  let timeRemaining = levelMaxTime - timeUsed
+  if (statsElements.countDown.GAME_VALUE !== timeRemaining) {
+    statsElements.countDown.innerHTML = renderTime(timeRemaining);
+    statsElements.countDown.GAME_VALUE = timeRemaining;
+  }
+  if (timeRemaining < 0) {
+    document.dispatchEvent(new CustomEvent('Game Over'))
   }
 }
 
@@ -280,3 +305,8 @@ function newGame () {
   window.__objects__ = [];
   initGame();
 }
+
+document.addEventListener('Game Over', () => {
+  clearInterval(gameInterval);
+  document.querySelector('#game-over').classList.add('show')
+})
