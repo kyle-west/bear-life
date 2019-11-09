@@ -16,6 +16,12 @@
         width: 100%;
         height: 100%;
       }
+
+      ol {
+        padding: 0;
+        margin: 4px 24px;
+      }
+
       #game-stats {
         width: 100%;
         height: 40px;
@@ -55,12 +61,48 @@
 
       .splash [center] {
         text-align: center;
-        margin-top: 40vh;
+        margin-top: 100px;
+      }
+
+      .splash [small] {
+        font-size: 30px;
       }
 
       #game-over {
         background-color: black;
         color: white;
+      }
+
+      [gold] { color: gold; }
+      [cyan] { color: cyan; }
+      [blue] { color: blue; }
+
+      input, button {
+        width: 54px;
+        font-size: 50px;
+        font-family: monospace;
+        text-transform: uppercase;
+        padding: 5px;
+        text-align: center;
+        font-weight: bolder;
+        margin: 12px;
+      }
+
+      input:focus, button:focus {
+        outline: 10px solid gold;
+      }
+
+      button {
+        width: unset;
+        padding: 5px 60px;
+      }
+
+      [highscores] {
+        overflow-y: scroll;
+        height: 330px;
+        border: 1px solid white;
+        width: fit-content;
+        margin: auto;
       }
 
     </style>
@@ -84,8 +126,82 @@
     <canvas id="game"></canvas>
     <div class="splash" id="game-over">
       <div center>
-        GAME OVER
+        <span gold>GAME OVER</span> <br/><br/>
+        <span id="end-stats" small></span> <br/><br/>
+        <span small>ENTER YOUR INITIALS</span>
+        <div>
+          <input name="first" type="text" maxlength="1" initials/>
+          <input name="middle" type="text" maxlength="1" initials/>
+          <input name="last" type="text" maxlength="1" initials/>
+          <br/>
+          <button initials>ENTER</button>
+        </div>
       </div>
     </div>
+    <script>
+      (() => {
+        let highScores = JSON.parse(localStorage.getItem('__high_scores__') || '[]')
+        function addHighScore (score) {
+          highScores.push(score)
+          highScores.sort((a, b) => {
+            let aPoints = a.score.points
+            let bPoints = b.score.points
+            return bPoints - aPoints;
+          })
+          localStorage.setItem('__high_scores__', JSON.stringify(highScores))
+          return highScores.findIndex(x => x === score) // rank
+        }
+
+        let initialElements = [...document.querySelectorAll('[initials]')]
+
+        function handleInitials (e) {
+          let { key, currentTarget } = e
+          if (key === currentTarget.value) {
+            initialElements.forEach((element, index) => {
+              if (element === currentTarget) {
+                let nextElement = initialElements[index + 1]
+                nextElement.focus()
+              }
+            })
+          }
+        }
+
+        function submit(e) {
+          let [{ value: first = ' ' }, { value:middle = ' '}, { value:last = ' ' }] = initialElements;
+          let initials = [first, middle, last].map(x => x.toUpperCase()).join(' ')
+          let rank = addHighScore({
+            name: initials,
+            score: window.finalStats
+          })
+          showHighScores(rank, highScores)
+        }
+
+        function map(items, fn) {
+          return items.map(fn).join('')
+        }
+
+        function showHighScores (rank, scores) {
+          let textRank = ['1ST', '2ND', '3RD'][rank] || `${rank + 1}TH`
+          let html = `
+            <div center>
+              <span gold>HIGH SCORES</span> <br/><br/>
+              <span small>${rank < 3 ? '&#9733;' : ''} YOU GOT ${textRank} PLACE ${rank < 3 ? '&#9733;' : ''}</span> <br/><br/>
+              <div highscores>
+                <ol>
+                  ${map(scores, ({name, score}, index) => `<li${index === rank ? ' gold' : (index < 3 ? ' blue' : '')}>
+                    ${(index + 1).toString().padStart(2, '0')} : <span ${index === rank ? ' gold' : (index < 3 ? ' blue' : 'cyan')}>${name}</span> ${score.points.toString().padStart(6,'0')}
+                  </li>`)}
+                <ol>
+              </div>
+              <br/>
+              <button onclick="window.location.reload()">PLAY AGAIN</button>
+            </div>
+          `
+          document.getElementById('game-over').innerHTML = html;
+        }
+  
+        initialElements.forEach(i => i.type === 'text' ? (i.onkeyup = handleInitials) : (i.onclick = submit))
+      })()
+    </script>
   </body>
 </html>

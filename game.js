@@ -18,7 +18,11 @@ var mainWidth;
 var playerActions = {};
 var movementListenersAttached;
 var levelStartTime, levelMaxTime
-var gameInterval
+var cleanup = {
+  fnList: [],
+  add: (fn) => cleanup.fnList.push(fn),
+  exec: () => cleanup.fnList.forEach(fn => fn())
+}
 window.showBoundingBoxes = !!QUERY.debug;
 window.showObjectIds = !!QUERY.debug;
 window.__objects__ = [];
@@ -163,29 +167,40 @@ function initGame() {
       canvas.onmousemove = null;
     }
 
-    document.addEventListener('keydown', keyEventHandler);
-    document.addEventListener('keyup', keyEventHandler);
-    canvas.addEventListener('mousedown', mouseEventHandler);
-    canvas.addEventListener('mouseup', clearMovement);
-    canvas.addEventListener('mouseout', clearMovement);
-    
-    window.addEventListener("gamepadconnected", function(e) {
+    function attachGamepads(e) {
       gamepad = navigator.getGamepads()[e.gamepad.index];
       console.log('gamepad attached')
       window.addEventListener("gamepaddisconnected", function(e) {
         gamepad = null
         console.log('gamepad disconnected')
       }, {once: true});
-    });
+    }
+
+    document.addEventListener('keydown', keyEventHandler);
+    document.addEventListener('keyup', keyEventHandler);
+    canvas.addEventListener('mousedown', mouseEventHandler);
+    canvas.addEventListener('mouseup', clearMovement);
+    canvas.addEventListener('mouseout', clearMovement);
+    window.addEventListener("gamepadconnected", attachGamepads);
+
+    cleanup.add(() => {
+      document.removeEventListener('keydown', keyEventHandler);
+      document.removeEventListener('keyup', keyEventHandler);
+      canvas.removeEventListener('mousedown', mouseEventHandler);
+      canvas.removeEventListener('mouseup', clearMovement);
+      canvas.removeEventListener('mouseout', clearMovement);
+      window.removeEventListener("gamepadconnected", attachGamepads);
+    })
 
     movementListenersAttached = true;
   }
 
   levelStartTime = new Date()
-  levelMaxTime = QUERY.time || 120 // seconds
+  levelMaxTime = QUERY.time || (level < 4 ? 30 : (level < 8 ? 45 : 60)) // seconds
 
   if (level === 1) {
-    gameInterval = setInterval(animate, 1000/45);
+    let gameInterval = setInterval(animate, 1000/45);
+    cleanup.add(() => clearInterval(gameInterval))
   }
 }
 
@@ -307,6 +322,17 @@ function newGame () {
 }
 
 document.addEventListener('Game Over', () => {
-  clearInterval(gameInterval);
+  cleanup.exec()
+  window.finalStats = {
+    level,
+    hives: bear.stats.points,
+    points: bear.stats.points > 0 || level > 1 ? (level - 0.5) * 150 + bear.stats.points : 0
+  }
+  document.querySelector('#end-stats').innerHTML = `
+    LEVEL: ${finalStats.level}<br/>
+    HIVES EATEN: ${finalStats.hives}<br/>
+    TOTAL POINTS: ${finalStats.points}<br/>
+  `
   document.querySelector('#game-over').classList.add('show')
+  document.querySelector('#game-over [name=first]').focus()
 })
