@@ -13,7 +13,7 @@ var canvas, ctx, bear, immovableProps, hives;
 var statsElements = {}
 var x, y;
 var speed = QUERY.speed || 4;
-var level = 1;
+var level = 0;
 var mainWidth;
 var playerActions = {};
 var movementListenersAttached;
@@ -196,7 +196,7 @@ function initGame() {
   }
 
   levelStartTime = new Date()
-  levelMaxTime = QUERY.time || (level < 4 ? 30 : (level < 8 ? 45 : 60)) // seconds
+  levelMaxTime = QUERY.time || (level < 4 ? 45 : (level < 8 ? 60 : 75)) // seconds
 
   if (level === 1) {
     let gameInterval = setInterval(animate, 1000/45);
@@ -318,21 +318,18 @@ function newGame () {
   level++;
   speed = QUERY.speed || speed++ // get a little faster when you pass the first level
   window.__objects__ = [];
-  initGame();
+  initGame()
+  document.dispatchEvent(new CustomEvent('New Level'))
 }
 
-document.addEventListener('Game Over', () => {
-  cleanup.exec()
-  window.finalStats = {
-    level,
-    hives: bear.stats.points,
-    points: bear.stats.points > 0 || level > 1 ? (level - 0.5) * 150 + bear.stats.points : 0
-  }
-  document.querySelector('#end-stats').innerHTML = `
-    LEVEL: ${finalStats.level}<br/>
-    HIVES EATEN: ${finalStats.hives}<br/>
-    TOTAL POINTS: ${finalStats.points}<br/>
-  `
-  document.querySelector('#game-over').classList.add('show')
-  document.querySelector('#game-over [name=first]').focus()
-})
+
+LEVEL_MSG = {
+  1: `
+    Goal of the game: get all the honey you can before time runs out. <br/> 
+    But don't let the bees sting you! Once they go into their hive it is safe to attack.
+  `,
+  2: `
+    Now that you have gotten some energy from the honey you have eaten, you can now punch your way around obstacles. <br/>
+    Try it out by running up against a tree and pressing the [SPACE] bar.
+  `,
+}
