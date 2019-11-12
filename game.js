@@ -196,7 +196,7 @@ function initGame() {
   }
 
   levelStartTime = new Date()
-  levelMaxTime = QUERY.time || (level < 4 ? 45 : (level < 8 ? 60 : 75)) // seconds
+  levelMaxTime = QUERY.time || Math.min(Math.ceil(level/2) * 15 + 30, 300) // between 0:45 and 5:00, increasing by 0:15 every two levels 
 
   if (level === 1) {
     let gameInterval = setInterval(animate, 1000/45);
@@ -205,6 +205,7 @@ function initGame() {
 }
 
 const axisThreshold = (value) => Math.abs(value) > 0.5
+
 function pollGamepad () {
   [gamepad] = navigator.getGamepads()
   if (!gamepad) return
@@ -216,7 +217,6 @@ function pollGamepad () {
     left: leftRight < 0 && axisThreshold(leftRight),
     right: leftRight > 0 && axisThreshold(leftRight),
   }
-  gamepad
 }
 
 function animate() {

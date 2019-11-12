@@ -1,0 +1,96 @@
+<html>
+  <head>
+    <script src="./renderable.js"></script>
+    <script src="./bear.js"></script>
+    <script src="./tree.js"></script>
+    <script src="./beehive.js"></script>
+    <script src="./bee.js"></script>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+      (() => {
+        var QUERY = !!window.location.search &&
+        Object.fromEntries(
+          window.location
+                .search
+                .substr(1)
+                .split('&')
+                .map(x => x.split('='))
+                .map(([k,v]) => [decodeURIComponent(k), JSON.parse(decodeURIComponent(v))])
+        )
+        console.log(QUERY)
+        var canvas, ctx, renders = []
+        var scale = QUERY.scale || 2
+        var gridLines = QUERY.gridLines || 5
+        window.showBoundingBoxes = !!QUERY.debug;
+        window.showObjectIds = !!QUERY.debug;
+        window.__objects__ = [];
+
+        function block(x, y, color = 'black', width = 8, height) {
+          ctx.fillStyle = color;
+          ctx.fillRect(x, y, width, height || width);
+        }
+
+        function drawGrid (width, height) {
+          let max = width / gridLines;
+          let i = 0;
+          while (i < max) {
+            block(i * gridLines, 0, 'gray', 1, height)
+            i++
+          }
+          max = height / gridLines;
+          i = 0;
+          while (i < max) {
+            block(0, i * gridLines, 'gray', width, 1)
+            i++
+          }
+        }
+
+        function init() {
+          canvas = document.getElementById('game');
+          ctx = canvas.getContext('2d');
+          canvas.width = document.body.clientWidth;
+          canvas.height = document.body.clientHeight-60;
+          ctx.scale(scale, scale)
+          
+          window.addEventListener('resize', () => {
+            canvas.width = document.body.clientWidth;
+            canvas.height = document.body.clientHeight-60;
+            ctx.scale(scale, scale)
+          })
+
+          let [x, y] = [50, 50]
+          let padding = 100
+          renders.push(new Bear(ctx, x, y, Bear.FRONT))
+          renders.push(new Bear(ctx, x + padding, y, Bear.LEFT))
+          renders.push(new Bear(ctx, x + padding * 2, y, Bear.RIGHT))
+          renders.push(new Bear(ctx, x + padding * 3, y, Bear.BACK))
+
+          renders.push(new Tree(ctx, x, y + padding, 6))
+          renders.push(new Tree(ctx, x + padding, y + padding, 5))
+          renders.push(new Tree(ctx, x + padding * 2, y + padding, 4))
+          renders.push(new Tree(ctx, x + padding * 3, y + padding, 3))
+          renders.push(new Tree(ctx, x + padding * 4, y + padding, 2))
+
+          renders.push(new Beehive(ctx, x, y + padding * 2, null, true))
+
+          setInterval(animate, 1000/45);
+        }
+
+        let backgroundColor = QUERY.backgroundColor || 'limegreen'
+        let showGrid = QUERY.showGrid || false
+
+        function animate() {
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          showGrid && drawGrid(canvas.width, canvas.height)
+          renders.forEach(r => r.render());
+        }
+
+        init()
+      })()
+    </script>
+  </body>
+</html>

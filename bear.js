@@ -1,7 +1,7 @@
-class Bear {
+class Bear extends Renderable {
   constructor (ctx, x, y, face) {
-    this.__ctx = ctx;
-    this.move(x || 25, y || 25);
+    super(ctx, x, y)
+
     this._face = face || Bear.FRONT;
     this._full_leftOffset    = -16;
     this._full_rightOffset   =  36;
@@ -22,11 +22,11 @@ class Bear {
     this._punching = false
   }
   
-  static get BACK  () { return 0; }
   static get FRONT () { return 1; }
   static get LEFT  () { return 2; }
   static get RIGHT () { return 3; }
-
+  static get BACK  () { return 4; }
+  
   static get baseColor  () { return 'brown'; }
   static get eyeColor   () { return 'black'; }
   static get snoutColor () { return 'black'; }
@@ -59,33 +59,21 @@ class Bear {
     return true;
   }
 
-  move (x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
   face (side) {
     this._face = side;
   }
   
   render (x, y) {
-    if (window.showBoundingBoxes) {
-      this._drawBoundingBox();
-    }
+    this.renderBoundingBoxIfNeeded()
+
     switch (this._face) {
       case Bear.FRONT: this._front(x, y); break; 
       case Bear.LEFT:  this._left (x, y); break; 
-      case Bear.RIGHT: this._right(x, y); break; 
+      case Bear.RIGHT: this._right(x, y); break;
       default:         this._back (x, y);
     }
-    if (window.showBoundingBoxes) {
-      this.__block(x, y, 'blue', 1, 1);
-    }
-  }
-
-  __block (x, y, color = 'black', width = 8, height) {
-    this.__ctx.fillStyle = color;
-    this.__ctx.fillRect(x, y, width, height || width);
+    
+    this.renderObjectIdsIfNeeded()
   }
 
   get fullBoundingBoxObject () {
@@ -97,22 +85,6 @@ class Bear {
         return inBounds;
       }
     }
-  }
-
-  isInBoundingBox (x, y) {
-    let inBounds = (this.x + this._leftOffset < x && x < this.x + this._rightOffset) 
-                && (this.y + this._topOffset  < y && y < this.y + this._bottomOffset);
-    return inBounds;
-  }
-
-  _drawBoundingBox () {
-    this.__block(
-      this.x + this._leftOffset, 
-      this.y + this._topOffset, 
-      'lightgrey', 
-      this._rightOffset - this._leftOffset,
-      this._bottomOffset - this._topOffset // 52, 68
-    );
   }
 
   _back (x, y) {

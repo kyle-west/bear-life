@@ -1,20 +1,22 @@
-class Bee {
+class Bee extends Renderable {
   constructor (ctx, hive) {
+    super(ctx, hive.hole.x, hive.hole.y) 
+
     this.hive = hive;
     this.__ctx = ctx;
-    this.x = hive.hole.x;
-    this.y = hive.hole.y;
     this.active = true;
   }
 
   static get baseColor ()  { return "black"; }
 
   render () { 
+    this.renderObjectIdsIfNeeded()
+
     if (this.active) {
       this.__ctx.fillStyle = Bee.baseColor;
       this.__ctx.fillRect(this.x, this.y, 2, 2);
     }
-
+    
     if (!this.hive.beesActive) {
       this.flyToHole();
     } else {

@@ -1,10 +1,7 @@
-class Beehive {
+class Beehive extends Renderable {
   constructor (ctx, x, y, color, hasBees = false) {
-    this.id = window.__objects__.length;
-    window.__objects__.push(this); 
+    super(ctx, x, y)
 
-    this.__ctx = ctx;
-    this.move(x || 25, y || 25);
     this.levelsHigh     =  5;
     this._leftOffset    =  0;
     this._rightOffset   =  this.levelsHigh * 10;
@@ -37,22 +34,11 @@ class Beehive {
   static get baseColor2 ()  { return "gold"; }
   static get wholeColor () { return "black"; }
 
-  move (x, y) {
-    this.x = x;
-    this.y = y;
-  }
-
   render (x, y) {
     if (x && y) this.move(x, y);
     
-    if (window.showBoundingBoxes) {
-      this._drawBoundingBox();
-    }
-    if (window.showObjectIds) {
-      this.__ctx.fillStyle = 'black';
-      this.__ctx.font="10px Monospace";
-      this.__ctx.fillText(this.id, this.x, this.y);
-    }
+    this.renderBoundingBoxIfNeeded()
+    this.renderObjectIdsIfNeeded()
 
     let width = 10 * this.levelsHigh - 1;
     let height = width;
@@ -68,26 +54,5 @@ class Beehive {
     this.__block(this.hole.x, this.hole.y, Beehive.wholeColor, width - y_off*l, y_off);
 
     this.bees.forEach(bee => bee.render());
-  }
-
-  __block (x, y, color = 'black', width = 8, height) {
-    this.__ctx.fillStyle = color;
-    this.__ctx.fillRect(x, y, width, height || width);
-  }
-
-  isInBoundingBox (x, y) {
-    let inBounds = (this.x + this._leftOffset < x && x < this.x + this._rightOffset) 
-                && (this.y + this._topOffset  < y && y < this.y + this._bottomOffset);
-    return inBounds;
-  }
-
-  _drawBoundingBox () {
-    this.__block(
-      this.x + this._leftOffset, 
-      this.y + this._topOffset, 
-      'lightgrey', 
-      this._rightOffset - this._leftOffset,
-      this._bottomOffset - this._topOffset // 52, 68
-    );
   }
 }

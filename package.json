@@ -4,7 +4,8 @@
   "description": "Life is not easy when you are a little bear in big world.",
   "main": "index.html",
   "scripts": {
-    "start": "http-server -p 5000 -d -o"
+    "start": "http-server -p 5000 -d -o -a localhost",
+    "test": "open 'http://localhost:5000/test.html?showGrid=true&backgroundColor=%22white%22&gridLines=10' && http-server -p 5000 -a localhost"
   },
   "repository": {
     "type": "git",
