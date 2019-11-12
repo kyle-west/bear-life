@@ -1,5 +1,8 @@
 class Bee {
   constructor (ctx, hive) {
+    this.id = window.__objects__.length;
+    window.__objects__.push(this); 
+
     this.hive = hive;
     this.__ctx = ctx;
     this.x = hive.hole.x;
@@ -10,11 +13,17 @@ class Bee {
   static get baseColor ()  { return "black"; }
 
   render () { 
+    if (window.showObjectIds) {
+      this.__ctx.fillStyle = 'black';
+      this.__ctx.font="10px Monospace";
+      this.__ctx.fillText(this.id, this.x, this.y);
+    }
+
     if (this.active) {
       this.__ctx.fillStyle = Bee.baseColor;
       this.__ctx.fillRect(this.x, this.y, 2, 2);
     }
-
+    
     if (!this.hive.beesActive) {
       this.flyToHole();
     } else {

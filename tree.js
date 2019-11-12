@@ -1,5 +1,8 @@
 class Tree {
   constructor (ctx, x, y, levelsHigh) {
+    this.id = window.__objects__.length;
+    window.__objects__.push(this);
+    
     this.__ctx = ctx;
     this.move(x || 25, y || 25);
     this.levelsHigh     =  levelsHigh || 5;
@@ -39,6 +42,11 @@ class Tree {
     if (x && y) this.move(x, y);
     if (window.showBoundingBoxes) {
       this._drawBoundingBox();
+    }
+    if (window.showObjectIds) {
+      this.__ctx.fillStyle = 'black';
+      this.__ctx.font="10px Monospace";
+      this.__ctx.fillText(this.id, this.x, this.y);
     }
     let width = 10 * this.levelsHigh;
     let height = width;

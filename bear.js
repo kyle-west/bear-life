@@ -1,5 +1,8 @@
 class Bear {
   constructor (ctx, x, y, face) {
+    this.id = window.__objects__.length;
+    window.__objects__.push(this);
+
     this.__ctx = ctx;
     this.move(x || 25, y || 25);
     this._face = face || Bear.FRONT;
@@ -22,11 +25,11 @@ class Bear {
     this._punching = false
   }
   
-  static get BACK  () { return 0; }
   static get FRONT () { return 1; }
   static get LEFT  () { return 2; }
   static get RIGHT () { return 3; }
-
+  static get BACK  () { return 4; }
+  
   static get baseColor  () { return 'brown'; }
   static get eyeColor   () { return 'black'; }
   static get snoutColor () { return 'black'; }
@@ -75,8 +78,13 @@ class Bear {
     switch (this._face) {
       case Bear.FRONT: this._front(x, y); break; 
       case Bear.LEFT:  this._left (x, y); break; 
-      case Bear.RIGHT: this._right(x, y); break; 
+      case Bear.RIGHT: this._right(x, y); break;
       default:         this._back (x, y);
+    }
+    if (window.showObjectIds) {
+      this.__ctx.fillStyle = 'black';
+      this.__ctx.font="10px Monospace";
+      this.__ctx.fillText(this.id, this.x, this.y);
     }
     if (window.showBoundingBoxes) {
       this.__block(x, y, 'blue', 1, 1);
