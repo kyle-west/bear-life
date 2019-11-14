@@ -5,6 +5,7 @@
     <script src="./tree.js"></script>
     <script src="./beehive.js"></script>
     <script src="./bee.js"></script>
+    <script src="./hunter.js"></script>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
@@ -63,18 +64,33 @@
 
           let [x, y] = [50, 50]
           let padding = 100
-          renders.push(new Bear(ctx, x, y, Bear.FRONT))
+          let bear1, bear4
+          renders.push(bear1 = new Bear(ctx, x, y, Bear.FRONT))
           renders.push(new Bear(ctx, x + padding, y, Bear.LEFT))
           renders.push(new Bear(ctx, x + padding * 2, y, Bear.RIGHT))
-          renders.push(new Bear(ctx, x + padding * 3, y, Bear.BACK))
-
+          renders.push(bear4 = new Bear(ctx, x + padding * 3, y, Bear.BACK))
+          
+          
           renders.push(new Tree(ctx, x, y + padding, 6))
           renders.push(new Tree(ctx, x + padding, y + padding, 5))
           renders.push(new Tree(ctx, x + padding * 2, y + padding, 4))
           renders.push(new Tree(ctx, x + padding * 3, y + padding, 3))
           renders.push(new Tree(ctx, x + padding * 4, y + padding, 2))
-
+          
           renders.push(new Beehive(ctx, x, y + padding * 2, null, true))
+          
+          let hunterL, hunterR
+          renders.push(hunterL = new Hunter(ctx, x, y + padding * 3, Hunter.RIGHT))
+          renders.push(hunterR = new Hunter(ctx, x + padding * 3, y + padding * 3, Hunter.LEFT))
+
+          renders.push(hunterL.fireAt(bear4))
+          renders.push(hunterR.fireAt(bear1))
+          setInterval(() => {
+            renders.push(hunterL.fireAt(bear4))
+            renders.push(hunterR.fireAt(bear1))
+          }, 5000)
+          
+          // renders.push(new Hunter(ctx, x + padding * 2, y + padding * 3, Hunter.RIGHT))
 
           setInterval(animate, 1000/45);
         }

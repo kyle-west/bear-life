@@ -3,7 +3,6 @@ class Bee extends Renderable {
     super(ctx, hive.hole.x, hive.hole.y) 
 
     this.hive = hive;
-    this.__ctx = ctx;
     this.active = true;
   }
 
