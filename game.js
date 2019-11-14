@@ -9,7 +9,7 @@ var QUERY = !!window.location.search &&
   )
 console.log(QUERY)
 var gamepad = null;
-var canvas, ctx, bear, immovableProps, hives;
+var canvas, ctx, bear, immovableProps, hives, hunters, bullets;
 var statsElements = {}
 var x, y;
 var speed = QUERY.speed || 4;
@@ -75,6 +75,8 @@ function initGame() {
 
   immovableProps = [];
   hives = [];
+  hunters = [];
+  bullets = [];
   let i = 0;
 
   let numTrees = QUERY.numTrees === undefined ? Math.min(Math.floor((mainWidth/15) * ((level + 1) * .5)), mainWidth/6) : QUERY.numTrees
@@ -105,13 +107,38 @@ function initGame() {
     let hive = new Beehive(ctx, randX, randY, null, QUERY.noBees === undefined);
     if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, hive)) {
       var hasSpace = true;
-      immovableProps.forEach((prop, i) => {
+      immovableProps.forEach((prop) => {
         if (boundingBoxesIntersect(prop, hive)) {
           hasSpace = false;
         }
       });
       if (hasSpace) {
         hives.push(hive); i++;
+      }
+    }
+  }
+
+  let numHunters = QUERY.numHunters || level
+  i = 0;
+  while (i < numHunters) {
+    let randX = randomX(.7)
+    let randY = randomY(.7)
+    let face = randomX > (canvas.width / 2) ? Hunter.LEFT : Hunter.RIGHT
+    let hunter = new Hunter(ctx, randX, randY, face);
+    if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, hunter)) {
+      var hasSpace = true;
+      immovableProps.forEach((prop) => {
+        if (boundingBoxesIntersect(prop, hunter)) {
+          hasSpace = false;
+        }
+      });
+      if (hasSpace) {
+        hunters.push(hunter); i++;
+        hunter.track(bear)
+        let fireInterval = setInterval(() => {
+          bullets.push(hunter.fireAt(bear))
+        }, random(5000, 1000));
+        cleanup.add(() => clearInterval(fireInterval))
       }
     }
   }
@@ -226,6 +253,8 @@ function animate() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   immovableProps.forEach(prop => prop.render());
   hives.forEach(hive => hive.render());
+  hunters.forEach(hunter => hunter.render());
+  bullets.forEach(bullet => bullet.render());
   bear.render(x, y);
 
   gamepad && pollGamepad()
