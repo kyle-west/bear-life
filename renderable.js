@@ -22,9 +22,9 @@ class Renderable {
     return inBounds;
   }
 
-  renderBoundingBoxIfNeeded() {
+  renderBoundingBoxIfNeeded(boundingBox) {
     if (window.showBoundingBoxes) {
-      this._drawBoundingBox();
+      this._drawBoundingBox(boundingBox);
     }
   }
 
@@ -39,13 +39,18 @@ class Renderable {
     }
   }
 
-  _drawBoundingBox () {
+  _drawBoundingBox (boundingBox) {
+    let box = boundingBox || this
     this.__block(
-      this.x + this._leftOffset, 
-      this.y + this._topOffset, 
-      'lightgrey', 
-      this._rightOffset - this._leftOffset,
-      this._bottomOffset - this._topOffset // 52, 68
+      this.x + box._leftOffset, 
+      this.y + box._topOffset, 
+      box.color || 'lightgrey', 
+      box._rightOffset - box._leftOffset,
+      box._bottomOffset - box._topOffset // 52, 68
     );
+  }
+  
+  checkBounds ({x, y}) {
+    return this.x < 0 || this.x > x || this.y < 0 || this.y > y
   }
 }

@@ -8,6 +8,11 @@ class Bear extends Renderable {
     this._full_topOffset     =  -4;
     this._full_bottomOffset  =  64;
 
+    this._target_leftOffset    = -5;
+    this._target_rightOffset   =  25;
+    this._target_topOffset     =  0;
+    this._target_bottomOffset  =  50;
+
     this._leftOffset    =  -2;
     this._rightOffset   =  22;
     this._topOffset     =  50;
@@ -15,7 +20,7 @@ class Bear extends Renderable {
 
     this.stats = {
       points: 0,
-      lives: 1
+      lives: 3
     }
     this.biteMutex = false
     this.biteImmunityTime = 1000
@@ -59,19 +64,26 @@ class Bear extends Renderable {
     return true;
   }
 
+  getHit() {
+    this.stats.lives--;
+  }
+
   face (side) {
     this._face = side;
   }
   
   render (x, y) {
+    this.renderBoundingBoxIfNeeded(this.fullBoundingBoxObject)
+    this.renderBoundingBoxIfNeeded(this.targetBoundingBoxObject)
     this.renderBoundingBoxIfNeeded()
-
+    
     switch (this._face) {
       case Bear.FRONT: this._front(x, y); break; 
       case Bear.LEFT:  this._left (x, y); break; 
       case Bear.RIGHT: this._right(x, y); break;
       default:         this._back (x, y);
     }
+
     
     this.renderObjectIdsIfNeeded()
   }
@@ -79,9 +91,30 @@ class Bear extends Renderable {
   get fullBoundingBoxObject () {
     var self = this;
     return {
+      color: 'darkgrey',
+      _leftOffset  : self._full_leftOffset,
+      _rightOffset : self._full_rightOffset,
+      _topOffset   : self._full_topOffset,
+      _bottomOffset: self._full_bottomOffset,
       isInBoundingBox: function (x, y) {
         let inBounds = (self.x + self._full_leftOffset < x && x < self.x + self._full_rightOffset) 
-                    && (self.y + self._full_topOffset  < y && y < self.y + self._full_bottomOffset);
+        && (self.y + self._full_topOffset  < y && y < self.y + self._full_bottomOffset);
+        return inBounds;
+      }
+    }
+  }
+  
+  get targetBoundingBoxObject () {
+    var self = this;
+    return {
+      color: 'red',
+      _leftOffset  : self._target_leftOffset,
+      _rightOffset : self._target_rightOffset,
+      _topOffset   : self._target_topOffset,
+      _bottomOffset: self._target_bottomOffset,
+      isInBoundingBox: function (x, y) {
+        let inBounds = (self.x + self._target_leftOffset < x && x < self.x + self._target_rightOffset) 
+                    && (self.y + self._target_topOffset  < y && y < self.y + self._target_bottomOffset);
         return inBounds;
       }
     }
