@@ -13,10 +13,10 @@ class Bullet extends Renderable {
     this.velX = velocity * Math.cos(theta) * signX
     this.velY = velocity * Math.sin(theta) * signY
 
-    this._leftOffset    =  -4;
-    this._rightOffset   =  8;
-    this._topOffset     =  -4;
-    this._bottomOffset  =  8;
+    this._leftOffset    =  -1;
+    this._rightOffset   =  5;
+    this._topOffset     =  -1;
+    this._bottomOffset  =  5;
     this.live = true
   }
 

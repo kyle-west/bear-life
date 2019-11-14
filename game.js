@@ -36,6 +36,15 @@ function block(x, y, color = 'black', width = 8, height) {
   ctx.fillRect(x, y, width, height || width);
 }
 
+function removeObjectFromContainer(obj, container) {
+  let idx = container.findIndex(x => x === obj)
+  return container.splice(idx, 1)
+}
+function cleanUpObject(obj, container) {
+  removeObjectFromContainer(obj, container)
+  removeObjectFromContainer(obj, window.__objects__)
+}
+
 function boundingBoxesIntersect (first, second) {
   let intersect = 
     first .isInBoundingBox(second.x + second._leftOffset,  second.y + second._topOffset   ) ||
@@ -51,6 +60,7 @@ function boundingBoxesIntersect (first, second) {
 
 function initStats () {
   statsElements.points = statsElements.points || document.querySelector('#game-stats #points') 
+  statsElements.lives = statsElements.lives || document.querySelector('#game-stats #lives') 
   statsElements.level = statsElements.level || document.querySelector('#game-stats #level')
   statsElements.countDown = statsElements.countDown || document.querySelector('#game-stats #countDown')
 }
@@ -121,8 +131,8 @@ function initGame() {
   let numHunters = QUERY.numHunters || level
   i = 0;
   while (i < numHunters) {
-    let randX = randomX(.7)
-    let randY = randomY(.7)
+    let randX = randomX(1)
+    let randY = randomY(1)
     let face = randomX > (canvas.width / 2) ? Hunter.LEFT : Hunter.RIGHT
     let hunter = new Hunter(ctx, randX, randY, face);
     if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, hunter)) {
@@ -284,6 +294,8 @@ function animate() {
   }
 
   bear.move(x, y);
+  
+  // trees
   let intersectedObject = immovableProps.reduce((a, prop) => {return a || (boundingBoxesIntersect(bear, prop) && prop)}, null);
   if (intersectedObject) {
     if (playerActions.punch && intersectedObject.canPunch) {
@@ -294,7 +306,23 @@ function animate() {
     x = prevX;
     y = prevY;
   }
+  
+  // bullets
+  let intersectedBullet = bullets.reduce((a, bullet) => {return a || (boundingBoxesIntersect(bear.targetBoundingBoxObject, bullet) && bullet)}, null);
+  if (intersectedBullet) {
+    bear.getHit()
+    cleanUpObject(intersectedBullet, bullets)
+  }
+  bullets.forEach(b => {
+    let {width : x, height: y} = canvas
+    let outOfBounds = b.checkBounds({ x, y })
+    if (outOfBounds) {
+      cleanUpObject(b, bullets)
+    }
+  })
 
+
+  // hives
   hives.forEach((hive, i) => {
     if (boundingBoxesIntersect(bear, hive)) {
       bear.eat(hive);
@@ -324,6 +352,10 @@ function renderStats () {
   if (statsElements.points.GAME_VALUE !== bear.stats.points) {
     statsElements.points.innerHTML = bear.stats.points;
     statsElements.points.GAME_VALUE = bear.stats.points;
+  }
+  if (statsElements.lives.GAME_VALUE !== bear.stats.lives) {
+    statsElements.lives.innerHTML = bear.stats.lives;
+    statsElements.lives.GAME_VALUE = bear.stats.lives;
   }
   if (statsElements.level.GAME_VALUE !== level) {
     statsElements.level.innerHTML = level;
