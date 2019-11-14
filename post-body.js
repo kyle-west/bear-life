@@ -98,3 +98,7 @@ function showHighScores (rank, scores) {
 }
 
 initialElements.forEach(i => i.type === 'text' ? (i.onkeyup = handleInitials) : (i.onclick = submit))
+
+
+// Auto start game on debug
+QUERY.debug && document.dispatchEvent(new CustomEvent('Start Game'))

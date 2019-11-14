@@ -1,20 +1,23 @@
 class Bullet extends Renderable {
-  constructor (ctx, start, end) {
+  constructor (ctx, start, end, velocity = 3) {
     super(ctx, start.x, start.y) 
     
     this.start = start
     this.end = end
-    
-    let diffX = end.x - start.x
-    let diffY = end.y - start.y
-    let mag = Math.sqrt(Math.pow(diffX, 2), Math.pow(diffY, 2))
-    this.velX = diffX / mag
-    this.velY = diffY / mag
+
+    let diffX = start.x - end.x
+    let diffY = start.y - end.y
+    let signX = diffX > 0 ? -1 : 1
+    let signY = diffY > 0 ? 1 : -1
+    let theta = Math.atan((diffY*signY)/(diffX*signX))
+    this.velX = velocity * Math.cos(theta) * signX
+    this.velY = velocity * Math.sin(theta) * signY
 
     this._leftOffset    =  -4;
     this._rightOffset   =  8;
     this._topOffset     =  -4;
     this._bottomOffset  =  8;
+    this.live = true
   }
 
   static get baseColor ()  { return "#333"; }
@@ -40,7 +43,7 @@ class Hunter extends Renderable {
   constructor (ctx, x, y, face) {
     super(ctx, x, y)
 
-    this._face = face || Hunter.FRONT;
+    this._face = face || Hunter.LEFT;
 
     this._leftOffset    =  5;
     this._rightOffset   =  45;
@@ -70,9 +73,17 @@ class Hunter extends Renderable {
   face (side) {
     this._face = side;
   }
+
+  track(target) {
+    this.target = target
+  }
   
   render (x, y) {
     this.renderBoundingBoxIfNeeded()
+
+    if (this.target) {
+      this.face(this.target.x > this.x ? Hunter.RIGHT : Hunter.LEFT)
+    }
 
     switch (this._face) {
       case Hunter.LEFT:  this._left (x, y); break; 

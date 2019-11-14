@@ -1,5 +1,5 @@
 class Renderable {
-  constructor (ctx, x, y, face) {
+  constructor (ctx, x, y) {
     this.id = window.__objects__.length;
     window.__objects__.push(this);
     this.__ctx = ctx;
