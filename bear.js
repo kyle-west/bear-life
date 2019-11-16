@@ -66,6 +66,10 @@ class Bear extends Renderable {
 
   getHit() {
     this.stats.lives--;
+    if (this.stats.lives < 0) {
+      this.stats.lives = 0;
+      document.dispatchEvent(new CustomEvent('Game Over'))
+    }
   }
 
   face (side) {
@@ -100,7 +104,8 @@ class Bear extends Renderable {
         let inBounds = (self.x + self._full_leftOffset < x && x < self.x + self._full_rightOffset) 
         && (self.y + self._full_topOffset  < y && y < self.y + self._full_bottomOffset);
         return inBounds;
-      }
+      },
+      move: function (...args) { self.move(...args) }
     }
   }
   

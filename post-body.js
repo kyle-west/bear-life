@@ -20,6 +20,8 @@
   })
   
   document.addEventListener('Game Over', () => {
+    if (QUERY.preventGameOver) return
+    
     cleanup.exec()
     window.finalStats = {
       level,

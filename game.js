@@ -9,11 +9,11 @@ var QUERY = !!window.location.search &&
   )
 console.log(QUERY)
 var gamepad = null;
-var canvas, ctx, bear, immovableProps, hives, hunters, bullets;
+var canvas, ctx; 
+var bear, immovableProps = [], hives = [], hunters = [];
 var statsElements = {}
 var x, y;
 var speed = QUERY.speed || 4;
-var level = 0;
 var mainWidth;
 var playerActions = {};
 var movementListenersAttached;
@@ -23,40 +23,9 @@ var cleanup = {
   add: (fn) => cleanup.fnList.push(fn),
   exec: () => cleanup.fnList.forEach(fn => fn())
 }
-window.showBoundingBoxes = !!QUERY.debug;
-window.showObjectIds = !!QUERY.debug;
-window.__objects__ = [];
+window.level = 0;
+window.debug = !!QUERY.debug;
 
-const random = (max, min = 0) => Math.floor(min + Math.random() * max)
-const randomX = (scale = 0.9) => random(canvas.width * scale)
-const randomY = (scale = 0.9) => random(canvas.height * scale)
-
-function block(x, y, color = 'black', width = 8, height) {
-  ctx.fillStyle = color;
-  ctx.fillRect(x, y, width, height || width);
-}
-
-function removeObjectFromContainer(obj, container) {
-  let idx = container.findIndex(x => x === obj)
-  return container.splice(idx, 1)
-}
-function cleanUpObject(obj, container) {
-  removeObjectFromContainer(obj, container)
-  removeObjectFromContainer(obj, window.__objects__)
-}
-
-function boundingBoxesIntersect (first, second) {
-  let intersect = 
-    first .isInBoundingBox(second.x + second._leftOffset,  second.y + second._topOffset   ) ||
-    first .isInBoundingBox(second.x + second._leftOffset,  second.y + second._bottomOffset) ||
-    first .isInBoundingBox(second.x + second._rightOffset, second.y + second._topOffset   ) ||
-    first .isInBoundingBox(second.x + second._rightOffset, second.y + second._bottomOffset) ||
-    second.isInBoundingBox(first.x + first._leftOffset,    first.y + first._topOffset     ) ||
-    second.isInBoundingBox(first.x + first._leftOffset,    first.y + first._bottomOffset  ) ||
-    second.isInBoundingBox(first.x + first._rightOffset,   first.y + first._topOffset     ) ||
-    second.isInBoundingBox(first.x + first._rightOffset,   first.y + first._bottomOffset  );
-  return intersect;
-}
 
 function initStats () {
   statsElements.points = statsElements.points || document.querySelector('#game-stats #points') 
@@ -66,29 +35,25 @@ function initStats () {
 }
 
 function initGame() {
+  window.debug && console.log('>>>>>>>>>>>>>>>>>>>> initGame CALLED', level)
   initStats();
   
+  // Set up the canvas
   mainWidth = mainWidth || Math.min(document.body.clientWidth, document.body.clientHeight-60) - 20; 
   canvas = document.getElementById('game');
   ctx = canvas.getContext('2d');
   canvas.width = document.body.clientWidth;
   canvas.height = document.body.clientHeight-60;
   
-  window.addEventListener('resize', () => {
-    canvas.width = document.body.clientWidth;
-    canvas.height = document.body.clientHeight-60;
-  })
-  
+
+  // Initialize our Player as a Bear
   x = mainWidth / 2.1;
   y = mainWidth / 2.3;
   bear = bear || new Bear(ctx, x, y, Bear.FRONT);
 
-  immovableProps = [];
-  hives = [];
-  hunters = [];
-  bullets = [];
   let i = 0;
-
+  
+  immovableProps = []
   let numTrees = QUERY.numTrees === undefined ? Math.min(Math.floor((mainWidth/15) * ((level + 1) * .5)), mainWidth/6) : QUERY.numTrees
   while (i < numTrees) {
     let randX = randomX(2)
@@ -104,11 +69,14 @@ function initGame() {
       });
       if (hasSpace) {
         immovableProps.push(tree); i++;
+      } else {
+        window.removeObjectFromContainer(tree, immovableProps)
       }
     }
   }
   
-
+  
+  hives = []
   let numHives = QUERY.numHives || (4 + level)
   i = 0;
   while (i < numHives) {
@@ -123,36 +91,30 @@ function initGame() {
         }
       });
       if (hasSpace) {
-        hives.push(hive); i++;
-      }
-    }
-  }
-
-  let numHunters = QUERY.numHunters || level
-  i = 0;
-  while (i < numHunters) {
-    let randX = randomX(1)
-    let randY = randomY(1)
-    let face = randomX > (canvas.width / 2) ? Hunter.LEFT : Hunter.RIGHT
-    let hunter = new Hunter(ctx, randX, randY, face);
-    if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, hunter)) {
-      var hasSpace = true;
-      immovableProps.forEach((prop) => {
-        if (boundingBoxesIntersect(prop, hunter)) {
-          hasSpace = false;
-        }
-      });
-      if (hasSpace) {
-        hunters.push(hunter); i++;
-        hunter.track(bear)
-        let fireInterval = setInterval(() => {
-          bullets.push(hunter.fireAt(bear))
-        }, random(5000, 1000));
-        cleanup.add(() => clearInterval(fireInterval))
+        hives.push(hive); 
+        i++;
       }
     }
   }
   
+  
+  // Insert Hunters into the game one more every 4 levels
+  let numHunters = QUERY.numHunters || Math.floor(level / 4)
+  hunters = []
+  for (let h = 0; h < numHunters; ++h) {
+    // create hunter and move where there is no intersection
+    let xScale = 1, yScale = 1;    
+    let hunter = new Hunter(ctx, randomX(xScale), randomY(yScale));
+    window.preventIntersection(hunter, { xScale, yScale }, [ bear, ...immovableProps, ...hives ])
+    hunters.push(hunter)
+    
+    // Track the bear and start shooting
+    hunter.track(bear)
+    hunter.face(randomX > (canvas.width / 2) ? Hunter.LEFT : Hunter.RIGHT)
+  }
+
+
+  // Attach Controls for User Interaction
   if (!movementListenersAttached) {
     const directionKeyMap = {
       'ArrowUp': 'up',
@@ -219,6 +181,10 @@ function initGame() {
     canvas.addEventListener('mouseup', clearMovement);
     canvas.addEventListener('mouseout', clearMovement);
     window.addEventListener("gamepadconnected", attachGamepads);
+    window.addEventListener('resize', () => {
+      canvas.width = document.body.clientWidth;
+      canvas.height = document.body.clientHeight-60;
+    })
 
     cleanup.add(() => {
       document.removeEventListener('keydown', keyEventHandler);
@@ -257,16 +223,16 @@ function pollGamepad () {
 }
 
 function animate() {
+  // render environment and items
   renderStats();
-  
   ctx.fillStyle = 'limegreen';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   immovableProps.forEach(prop => prop.render());
   hives.forEach(hive => hive.render());
   hunters.forEach(hunter => hunter.render());
-  bullets.forEach(bullet => bullet.render());
   bear.render(x, y);
 
+  // collect controls from any joysticks
   gamepad && pollGamepad()
   
   // vvv BEAR MOVES vvv
@@ -292,10 +258,10 @@ function animate() {
     bear.face(Bear.RIGHT);
     x += speed;
   }
-
   bear.move(x, y);
+  // ^^^ BEAR MOVES ^^^
   
-  // trees
+  // see if we have intersected any trees
   let intersectedObject = immovableProps.reduce((a, prop) => {return a || (boundingBoxesIntersect(bear, prop) && prop)}, null);
   if (intersectedObject) {
     if (playerActions.punch && intersectedObject.canPunch) {
@@ -307,31 +273,21 @@ function animate() {
     y = prevY;
   }
   
-  // bullets
-  let intersectedBullet = bullets.reduce((a, bullet) => {return a || (boundingBoxesIntersect(bear.targetBoundingBoxObject, bullet) && bullet)}, null);
-  if (intersectedBullet) {
-    bear.getHit()
-    cleanUpObject(intersectedBullet, bullets)
-  }
-  bullets.forEach(b => {
-    let {width : x, height: y} = canvas
-    let outOfBounds = b.checkBounds({ x, y })
-    if (outOfBounds) {
-      cleanUpObject(b, bullets)
-    }
+  // check if hunter has made any hits to our bear
+  hunters.forEach(hunter => {
+    hunter.checkForHits()
+    hunter.checkBulletBounds(canvas)
   })
 
-
-  // hives
+  // check to see if we can eat any honey!
   hives.forEach((hive, i) => {
     if (boundingBoxesIntersect(bear, hive)) {
       bear.eat(hive);
       if (!hive.beesActive) {
-        hives.splice(i, 1);
+        window.removeObjectFromContainer(hive, hives);
       }
     }
   })
-  // ^^^ BEAR MOVES ^^^
 
   if (hives.length == 0) {
     newGame();
@@ -378,7 +334,6 @@ function renderStats () {
 function newGame () {
   level++;
   speed = QUERY.speed || speed++ // get a little faster when you pass the first level
-  window.__objects__ = [];
   initGame()
   document.dispatchEvent(new CustomEvent('New Level'))
 }
@@ -392,5 +347,8 @@ LEVEL_MSG = {
   2: `
     Now that you have gotten some energy from the honey you have eaten, you can now punch your way around obstacles. <br/>
     Try it out by running up against a tree and pressing the [SPACE] bar.
+  `,
+  4: `
+    Oh no! It's open season: Watch out for hunters! 
   `,
 }
