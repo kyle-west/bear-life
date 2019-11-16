@@ -19,19 +19,19 @@ class Bullet extends Renderable {
     this._bottomOffset  =  5;
     this.live = true
   }
-
+  
   static get baseColor ()  { return "#333"; }
-
+  
   render () { 
     this.renderBoundingBoxIfNeeded()
     this.renderObjectIdsIfNeeded()
-
+    
     this.__ctx.fillStyle = Bullet.baseColor;
     this.__ctx.fillRect(this.x, this.y, 4, 4);
-
+    
     this.moveAlongFlightPath()
   }
-
+  
   moveAlongFlightPath () {
     this.move(this.x + this.velX, this.y + this.velY)
   }
@@ -42,40 +42,68 @@ class Bullet extends Renderable {
 class Hunter extends Renderable {
   constructor (ctx, x, y, face) {
     super(ctx, x, y)
-
+    
     this._face = face || Hunter.LEFT;
-
+    
     this._leftOffset    =  5;
     this._rightOffset   =  45;
     this._topOffset     =  0;
     this._bottomOffset  =  45;
+    
+    this.bullets = []
   }
-
+  
   static get LEFT  () { return 1; }
   static get RIGHT () { return 2; }
   
   static get baseColor    () { return 'black'; }
   static get clothesColor () { return '#222'; }
   static get gunColor     () { return '#555'; }
-
-  fireAt (bear) {
+  
+  fireAt (target) {
     let start = {
       x : this.x + (this._face === Hunter.RIGHT ? 46 : 0), 
       y: this.y + 10,
     }
     let end = { 
-      x : bear.x + 10, 
-      y: bear.y + 20, 
+      x : target.x + 10, 
+      y: target.y + 20, 
     }
+    window.debug && console.log('fire bullet')
     return new Bullet(this.__ctx, start, end)
   }
-
+  
   face (side) {
     this._face = side;
   }
-
+  
   track(target) {
     this.target = target
+    this._fireInterval = random(400, 100)
+    this.renderCount = 0
+  }
+  
+  checkForHits () {
+    if (!this.target) return
+    let hit = this.bullets.reduce((a, bullet) => {
+      return a || (boundingBoxesIntersect(this.target.targetBoundingBoxObject, bullet) && bullet)
+    }, null);
+    if (hit) {
+      this.target.getHit()
+      window.removeObjectFromContainer(hit, this.bullets)
+      window.debug && console.log('bullet hit!')
+    }
+  }
+  
+  checkBulletBounds(canvas) {
+    this.bullets.forEach(b => {
+      let {width : x, height: y} = canvas
+      let outOfBounds = b.checkBounds({ x, y })
+      if (outOfBounds) {
+        window.debug && console.log('bullet went out of bounds')
+        window.removeObjectFromContainer(b, this.bullets)
+      }
+    })
   }
   
   render (x, y) {
@@ -88,6 +116,14 @@ class Hunter extends Renderable {
     switch (this._face) {
       case Hunter.LEFT:  this._left (x, y); break; 
       case Hunter.RIGHT: this._right(x, y); break;
+    }
+
+    if (this.target) {
+      this.renderCount++
+      if (this.renderCount % this._fireInterval === 0) {
+        this.bullets.push(this.fireAt(this.target))
+      }
+      this.bullets.forEach(b => b.render())
     }
     
     this.renderObjectIdsIfNeeded()
