@@ -25,11 +25,6 @@ window.removeObjectFromContainer = function (obj, container) {
   return container.splice(idx, 1)
 }
 
-window.cleanUpAllFrom = function (...containers) {
-  containers.map(container => container.length && container.map(item => window.removeObjectFromContainer(item, container)))
-}
-
-
 window.preventIntersection = function (item, { xScale, yScale }, collection) {
   while (collection.reduce((a, c) => a || window.boundingBoxesIntersect(item, c), false)) {
     console.log('Collision Detected with item', item.id)

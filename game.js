@@ -51,54 +51,32 @@ function initGame() {
   y = mainWidth / 2.3;
   bear = bear || new Bear(ctx, x, y, Bear.FRONT);
 
-  let i = 0;
   
-  immovableProps = []
+  // insert Trees into the game
   let numTrees = QUERY.numTrees === undefined ? Math.min(Math.floor((mainWidth/15) * ((level + 1) * .5)), mainWidth/6) : QUERY.numTrees
-  while (i < numTrees) {
-    let randX = randomX(2)
-    let randY = randomY(1)
+  immovableProps = []
+  for (let t = 0; t < numTrees; ++t) {
+    let xScale = 2, yScale = 1;    
     let levelsHigh = 5 + Math.floor(Math.random() * 2);
-    let tree = new Tree(ctx, randX, randY, levelsHigh);
-    if (!boundingBoxesIntersect(bear, tree) && !boundingBoxesIntersect(bear.fullBoundingBoxObject, tree)) {
-      var hasSpace = true;
-      immovableProps.forEach((prop) => {
-        if (boundingBoxesIntersect(prop, tree)) {
-          hasSpace = false;
-        }
-      });
-      if (hasSpace) {
-        immovableProps.push(tree); i++;
-      } else {
-        window.removeObjectFromContainer(tree, immovableProps)
-      }
-    }
-  }
+    let tree = new Tree(ctx, randomX(xScale), randomY(yScale), levelsHigh);
+    window.preventIntersection(tree, { xScale, yScale }, [ bear, ...immovableProps ])
+    immovableProps.push(tree)
+  }  
   
-  
-  hives = []
+
+  // insert delicious honey Hives into the game
   let numHives = QUERY.numHives || (4 + level)
-  i = 0;
-  while (i < numHives) {
-    let randX = randomX(.8)
-    let randY = randomY(.8)
-    let hive = new Beehive(ctx, randX, randY, null, QUERY.noBees === undefined);
-    if (!boundingBoxesIntersect(bear.fullBoundingBoxObject, hive)) {
-      var hasSpace = true;
-      immovableProps.forEach((prop) => {
-        if (boundingBoxesIntersect(prop, hive)) {
-          hasSpace = false;
-        }
-      });
-      if (hasSpace) {
-        hives.push(hive); 
-        i++;
-      }
-    }
-  }
+  hives = []
+  for (let i = 0; i < numHives; ++i) {
+    let xScale = 0.8, yScale = 0.8;    
+    let hive = new Beehive(ctx, randomX(xScale), randomY(yScale), null, QUERY.noBees === undefined);
+    window.preventIntersection(hive, { xScale, yScale }, [ bear, ...immovableProps ])
+    hive.addBees()
+    hives.push(hive)
+  } 
   
   
-  // Insert Hunters into the game one more every 4 levels
+  // insert Hunters into the game one more every 4 levels
   let numHunters = QUERY.numHunters || Math.floor(level / 4)
   hunters = []
   for (let h = 0; h < numHunters; ++h) {
