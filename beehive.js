@@ -7,16 +7,21 @@ class Beehive extends Renderable {
     this._rightOffset   =  this.levelsHigh * 10;
     this._topOffset     =  10;
     this._bottomOffset  =  10*(this.levelsHigh+1) + this._rightOffset/4;
+    this.hasBees = hasBees
+    this.color = color
+  }
+
+  addBees () {
     this.hole = {x: this.x + 5*(this.levelsHigh-1), y: this.y + 10*this.levelsHigh - 1};
     this.bees = [];
-    if (color) {
-      this.__baseColor = color;
+    if (this.color) {
+      this.__baseColor = this.color;
     } else {
       let rand = 1 + Math.floor(Math.random() * 2);
       this.__baseColor = Beehive[`baseColor${rand}`];
     }
     
-    if (hasBees) { 
+    if (this.hasBees) { 
       let numBees = 10 + Math.floor(Math.random() * 10);
       for (let i = 0; i < numBees; i++) {
         this.bees.push(new Bee(ctx, this));
@@ -27,7 +32,6 @@ class Beehive extends Renderable {
         this.beesActive = !this.beesActive;
       }, this.beeSleepTime);
     }
-
   }
 
   static get baseColor1 ()  { return "khaki"; }
