@@ -66,8 +66,7 @@ class Bear extends Renderable {
 
   getHit() {
     this.stats.lives--;
-    if (this.stats.lives < 0) {
-      this.stats.lives = 0;
+    if (this.stats.lives === 0) {
       document.dispatchEvent(new CustomEvent('Game Over'))
     }
   }

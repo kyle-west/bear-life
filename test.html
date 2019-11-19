@@ -1,11 +1,13 @@
 <html>
   <head>
+    <script src="./util.js"></script>
     <script src="./renderable.js"></script>
     <script src="./bear.js"></script>
     <script src="./tree.js"></script>
     <script src="./beehive.js"></script>
     <script src="./bee.js"></script>
     <script src="./hunter.js"></script>
+    <script src="./heart.js"></script>
     <link rel="stylesheet" href="./styles.css">
   </head>
   <body>
@@ -68,27 +70,24 @@
           renders.push(new Bear(ctx, x + padding * 2, y, Bear.RIGHT))
           renders.push(bear4 = new Bear(ctx, x + padding * 3, y, Bear.BACK))
           
-          
           renders.push(new Tree(ctx, x, y + padding, 6))
           renders.push(new Tree(ctx, x + padding, y + padding, 5))
           renders.push(new Tree(ctx, x + padding * 2, y + padding, 4))
           renders.push(new Tree(ctx, x + padding * 3, y + padding, 3))
           renders.push(new Tree(ctx, x + padding * 4, y + padding, 2))
           
-          renders.push(new Beehive(ctx, x, y + padding * 2, null, true))
+          let hive;
+          renders.push(hive = new Beehive(ctx, x + padding, y + padding * 2, null, true))
+          hive.addBees()
           
           let hunterL, hunterR
-          renders.push(hunterL = new Hunter(ctx, x, y + padding * 3, Hunter.RIGHT))
-          renders.push(hunterR = new Hunter(ctx, x + padding * 3, y + padding * 3, Hunter.LEFT))
+          renders.push(hunterL = new Hunter(ctx, x, y + padding * 2, Hunter.RIGHT))
+          renders.push(hunterR = new Hunter(ctx, x + padding * 3, y + padding * 2, Hunter.LEFT))
 
-          renders.push(hunterL.fireAt(bear4))
-          renders.push(hunterR.fireAt(bear1))
-          setInterval(() => {
-            renders.push(hunterL.fireAt(bear4))
-            renders.push(hunterR.fireAt(bear1))
-          }, 5000)
+          hunterL.track(bear4)
+          hunterR.track(bear1)
           
-          // renders.push(new Hunter(ctx, x + padding * 2, y + padding * 3, Hunter.RIGHT))
+          renders.push(new Heart(ctx, x + padding * 2, y + padding * 2))
 
           setInterval(animate, 1000/45);
         }

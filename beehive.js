@@ -24,7 +24,7 @@ class Beehive extends Renderable {
     if (this.hasBees) { 
       let numBees = 10 + Math.floor(Math.random() * 10);
       for (let i = 0; i < numBees; i++) {
-        this.bees.push(new Bee(ctx, this));
+        this.bees.push(new Bee(this.__ctx, this));
       }
       this.beesActive = true;
       this.beeSleepTime = 5000 + Math.floor(Math.random()*10000);
