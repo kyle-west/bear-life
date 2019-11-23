@@ -10,23 +10,20 @@ function pollGamepad () {
   if (!gamepad) return
 
   let [leftRight, upDown] = gamepad.axes
-  let [main] = gamepad.buttons
+  let [Enter] = gamepad.buttons
 
   let currentState = {
-    up: upDown < 0 && axisThreshold(upDown),
-    down: upDown > 0 && axisThreshold(upDown),
-    left: leftRight < 0 && axisThreshold(leftRight),
-    right: leftRight > 0 && axisThreshold(leftRight),
-    main: main && main.pressed,
+    ArrowUp: upDown < 0 && axisThreshold(upDown),
+    ArrowDown: upDown > 0 && axisThreshold(upDown),
+    ArrowLeft: leftRight < 0 && axisThreshold(leftRight),
+    ArrowRight: leftRight > 0 && axisThreshold(leftRight),
+    Enter: Enter && Enter.pressed,
   }
  
   Object.keys(currentState).forEach(key => {
     if (currentState[key] === lastState[key]) return
-    let event = new CustomEvent(
-      `Gamepad::${currentState[key] ? 'KeyDown' : 'KeyUp'}`, 
-      { detail: { key } }
-    )
-    document.dispatchEvent(event)
+    let event = new KeyboardEvent(currentState[key] ? 'keydown' : 'keyup', { key, bubbles: true})
+    document.activeElement.dispatchEvent(event)
   })
   lastState = currentState
 }
@@ -42,6 +39,3 @@ function attachGamepads(e) {
   }, {once: true});
 }
 window.addEventListener("gamepadconnected", attachGamepads);
-
-document.addEventListener('Gamepad::KeyDown', console.log)
-document.addEventListener('Gamepad::KeyUp', console.log)
