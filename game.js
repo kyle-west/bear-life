@@ -8,7 +8,6 @@ var QUERY = !!window.location.search &&
           .map(([k,v]) => [k, JSON.parse(v)])
   )
 console.log(QUERY)
-var gamepad = null;
 var canvas, ctx; 
 var bear, immovableProps = [], hives = [], hunters = [];
 var statsElements = {}
@@ -25,7 +24,6 @@ var cleanup = {
 }
 window.level = 0;
 window.debug = !!QUERY.debug;
-
 
 function initStats () {
   statsElements.points = statsElements.points || document.querySelector('#game-stats #points') 
@@ -144,21 +142,11 @@ function initGame() {
       canvas.onmousemove = null;
     }
 
-    function attachGamepads(e) {
-      gamepad = navigator.getGamepads()[e.gamepad.index];
-      console.log('gamepad attached')
-      window.addEventListener("gamepaddisconnected", function(e) {
-        gamepad = null
-        console.log('gamepad disconnected')
-      }, {once: true});
-    }
-
     document.addEventListener('keydown', keyEventHandler);
     document.addEventListener('keyup', keyEventHandler);
     canvas.addEventListener('mousedown', mouseEventHandler);
     canvas.addEventListener('mouseup', clearMovement);
     canvas.addEventListener('mouseout', clearMovement);
-    window.addEventListener("gamepadconnected", attachGamepads);
     window.addEventListener('resize', () => {
       canvas.width = document.body.clientWidth;
       canvas.height = document.body.clientHeight-60;
@@ -170,7 +158,6 @@ function initGame() {
       canvas.removeEventListener('mousedown', mouseEventHandler);
       canvas.removeEventListener('mouseup', clearMovement);
       canvas.removeEventListener('mouseout', clearMovement);
-      window.removeEventListener("gamepadconnected", attachGamepads);
     })
 
     movementListenersAttached = true;
@@ -185,20 +172,7 @@ function initGame() {
   }
 }
 
-const axisThreshold = (value) => Math.abs(value) > 0.5
 
-function pollGamepad () {
-  [gamepad] = navigator.getGamepads()
-  if (!gamepad) return
-  let [leftRight, upDown] = gamepad.axes
-  QUERY.debug && console.log(`leftRight, upDown | ${[leftRight, upDown]}`)
-  playerActions = {
-    up: upDown < 0 && axisThreshold(upDown),
-    down: upDown > 0 && axisThreshold(upDown),
-    left: leftRight < 0 && axisThreshold(leftRight),
-    right: leftRight > 0 && axisThreshold(leftRight),
-  }
-}
 
 function animate() {
   // render environment and items
@@ -209,9 +183,6 @@ function animate() {
   hives.forEach(hive => hive.render());
   hunters.forEach(hunter => hunter.render());
   bear.render(x, y);
-
-  // collect controls from any joysticks
-  gamepad && pollGamepad()
   
   // vvv BEAR MOVES vvv
   let prevX = x;
