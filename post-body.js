@@ -52,16 +52,23 @@ function addHighScore (score) {
 }
 
 let initialElements = [...document.querySelectorAll('[initials]')]
+initialElements.forEach((element, index) => {
+  element.previousElementInSequence = index === 0 ? initialElements[initialElements.length - 1] : initialElements[index-1]
+  element.nextElementInSequence = index === initialElements.length ? initialElements[0] : initialElements[index+1]
+})
 
 function handleInitials (e) {
   let { key, currentTarget } = e
   if (key === currentTarget.value) {
-    initialElements.forEach((element, index) => {
-      if (element === currentTarget) {
-        let nextElement = initialElements[index + 1]
-        nextElement.focus()
-      }
-    })
+    currentTarget.nextElementInSequence.focus()
+  } else if (key.startsWith('Arrow')) {
+    let action = {
+      "ArrowDown": () => currentTarget.value = String.fromCharCode((currentTarget.value || '@').charCodeAt(0) + 1),
+      "ArrowUp": () => currentTarget.value = String.fromCharCode((currentTarget.value || '[').charCodeAt(0) - 1),
+      "ArrowLeft": () => currentTarget.previousElementInSequence.focus(),
+      "ArrowRight": () => currentTarget.nextElementInSequence.focus(),
+    }[key]
+    action()
   }
 }
 
@@ -93,13 +100,20 @@ function showHighScores (rank, scores) {
         <ol>
       </div>
       <br/>
-      <button onclick="window.location.reload()">PLAY AGAIN</button>
+      <button 
+        id="play-again"
+        onclick="window.location.reload()"
+        onkeydown="window.location.reload()"
+      >
+        PLAY AGAIN
+      </button>
     </div>
   `
   document.getElementById('game-over-splash').innerHTML = html;
+  document.getElementById('play-again').focus()
 }
 
-initialElements.forEach(i => i.type === 'text' ? (i.onkeyup = handleInitials) : (i.onclick = submit))
+initialElements.forEach(i => i.type === 'text' ? (i.onkeyup = handleInitials) : (i.onkeyup = i.onclick = submit))
 
 
 // Auto start game on debug

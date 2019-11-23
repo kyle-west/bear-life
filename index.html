@@ -42,7 +42,13 @@
         <span small>LIFE IS NOT EASY BEING A SMALL BEAR IN A BIG WORLD</span>
         <br/>
         <br/>
-        <button id="kick-off-game" onclick="document.dispatchEvent(new CustomEvent('Start Game'))">PLAY</button>
+        <button 
+          id="kick-off-game" 
+          onclick="document.dispatchEvent(new CustomEvent('Start Game'))"
+          onkeydown="document.dispatchEvent(new CustomEvent('Start Game'))"
+        >
+          PLAY
+        </button>
       </div>
     </div>
 

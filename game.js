@@ -116,7 +116,8 @@ function initGame() {
           case 'f': document.documentElement.requestFullscreen(); break;
 
           case 'Space': 
-          case ' ': 
+          case 'Enter': 
+          case ' ':
             playerActions.punch = true; 
             console.log('punch')
             break;
