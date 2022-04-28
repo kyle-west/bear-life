@@ -21,4 +21,4 @@ One day I wanted to build a web game entirely in Vanilla JavaScript. _So I did._
 
 If you wish this game was better, feel fork it and send me a pull request. 
 
-Hit me up on Twitter ([@Kyl3W3st](https://twitter.com/Kyl3W3st)) if you have any questions or like my game. 
+Hit me up on Twitter ([@KyleWestCS](https://twitter.com/KyleWestCS)) if you have any questions or like my game. 
